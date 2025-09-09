@@ -5,43 +5,48 @@ import fs from 'fs';
 // npm module - used to read metadata from music files
 import * as musicMetadata from 'music-metadata';
 // Import the database driver
-//import mysql from 'mysql2/promise';
+import mysql from 'mysql2/promise';
 
 // A small function for a query
+// Load DB credentials from connection.json
+const config = JSON.parse(await fs.promises.readFile('connection.json', 'utf-8'));
+
+// Connect to the database
+const db = await mysql.createConnection(config);
+
+// A helper query function
 async function query(sql, listOfValues) {
   let result = await db.execute(sql, listOfValues);
   return result[0];
 }
 
-// read all file names from the test sound folder fodler
+// Read music files
 const files = (await fs.promises.readdir('./test_sound')).filter(file =>
   file.endsWith('.mp3') || file.endsWith('.wav') || file.endsWith('.flac')
 );
 
+console.log("#=#")
 // loop through all music files and read metadata
 for (let file of files) {
-
-  // Get the metadata for the file
   let metadata = await musicMetadata.parseFile('./test_sound/' + file);
 
-  // delete (in-memory) some parts of the metadata
-  // that we don't want in the database
-  // note: we are not deleteing anything in the files
-  // delete metadata.native;
-  // delete metadata.quality;
-  // delete metadata.common.disk;
+console.log("FORMAT METADATA for:", file);
+console.log(metadata.format);
 
-  // INSERT TO DATABASE
-  // let result = await query(`
-  //   INSERT INTO music (fileName, metadata)
-  //   VALUES(?, ?)
-  // `, [file, metadata]);
-
-  // Log the result of inserting in the database
-  console.log(metadata);
+  const title = metadata.common.title || null
+  console.log("title: " + title)
+  const artists = metadata.common.artists || null
+  console.log("artists: " + artists)
+  const album = metadata.common.album || null
+  console.log("album: " + album)
+  const genre = metadata.common.genre || null
+  console.log("genre: " + genre)
+ const duration = metadata.format.duration ?? null;
+ console.log("duration:", duration);
+  console.log("#=#")
 
 }
 
 // exit/stop the script when everything is imported
 // so you don't have to precc Ctrl+C
-// process.exit();
+process.exit();
