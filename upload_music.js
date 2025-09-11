@@ -24,20 +24,18 @@ let db;
     database: data.database
   });
   console.log("[Connected to DB]");
-  
-  await db.execute("DROP TABLE IF EXISTS sounds");
 
-     const createStatement = `
-         CREATE TABLE sounds (
-             title VARCHAR(50), 
-             artists VARCHAR(255), 
-             album VARCHAR(50), 
-             genres VARCHAR(255), 
-             duration DECIMAL(6,2),
-             year INT
-        )
-     `;
-    await db.execute(createStatement);
+  const createStatement = `
+      CREATE TABLE IF NOT EXISTS sounds (
+          title VARCHAR(50), 
+          artists VARCHAR(255), 
+          album VARCHAR(50), 
+          genres VARCHAR(255), 
+          duration DECIMAL(6,2),
+          year INT
+      )
+  `;
+  await db.execute(createStatement);
 
     const files = (await fs.promises.readdir('./test_sound')).filter(file =>
     file.endsWith('.mp3') || file.endsWith('.wav') || file.endsWith('.flac')
@@ -86,43 +84,3 @@ let db;
        console.log("[Connection closed]");
      }
  }
-
-
-
-// // // A helper query function
-// // async function query(sql, listOfValues) {
-// //   let result = await db.execute(sql, listOfValues);
-// //   return result[0];
-// // }
-
-// // Read music files
-// const files = (await fs.promises.readdir('./test_sound')).filter(file =>
-//   file.endsWith('.mp3') || file.endsWith('.wav') || file.endsWith('.flac')
-// );
-
-// console.log("#=#")
-// // loop through all music files and read metadata
-// for (let [index, file] of files.entries()) {
-//   let metadata = await musicMetadata.parseFile('./test_sound/' + file);
-
-//  console.log(`Processing file ${index + 1} out of ${files.length}: ${file}`);
-
-//   const title = metadata.common.title || null
-//   console.log("title: " + title+ " " + typeof title)
-//   const artists = metadata.common.artists || null
-//   console.log("artists: " + artists + " " + typeof artists)
-//   const album = metadata.common.album || null
-//   console.log("album: " + album + " " + typeof album)
-//   const genre = metadata.common.genre || null
-//   console.log("genre: " + genre + " " + typeof genre)
-//   const duration = metadata.format.duration ?? null;
-//   console.log("duration:", duration + " " + typeof duration);
-//   const year = metadata.common.year || null
-//   console.log("year:", year + " " + typeof year);
-//   console.log("#=#")
-
-// }
-
-// // exit/stop the script when everything is imported
-// // so you don't have to precc Ctrl+C
-// process.exit();
