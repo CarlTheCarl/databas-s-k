@@ -55,7 +55,7 @@ let db;
 
     const title = metadata.common.title || null;
     const artists = metadata.common.artists?.join(', ') || null;
-    const album = metadata.common.album || null;
+    const album = metadata.common.album || 'Single (No Album)';
     const genres = metadata.common.genre?.join(', ') || null;
     const rawDuration = metadata.format.duration;
     const duration = rawDuration != null
