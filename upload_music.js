@@ -32,7 +32,8 @@ let db;
           album VARCHAR(50), 
           genres VARCHAR(255), 
           duration DECIMAL(6,2),
-          year INT
+          year INT,
+          UNIQUE(title, artists, album)
       )
   `;
   await db.execute(createStatement);
@@ -42,7 +43,7 @@ let db;
     );
 
     const insertQuery = `
-      INSERT INTO sounds (title, artists, album, genres, duration, year)
+      INSERT IGNORE INTO sounds (title, artists, album, genres, duration, year)
       VALUES (?, ?, ?, ?, ?, ?)
     `;
 
@@ -62,14 +63,22 @@ let db;
       : null;
     const year = metadata.common.year || null;
 
-    await db.execute(insertQuery, [
-      title,
-      artists,
-      album,
-      genres,
-      duration,
-      year
-    ]);
+    const [result] = await db.execute(insertQuery, [
+    title,
+    artists,
+    album,
+    genres,
+    duration,
+    year
+  ]);
+
+  if (result.affectedRows === 0) {
+    console.log(`Duplicate skipped: ${title} by ${artists} (${album})`);
+
+  } else {
+    console.log(`Inserted: ${title} by ${artists} (${album})`);
+  }
+
 
   } catch (fileErr) {
     console.warn(`Failed to process ${file}:`, fileErr.message);
