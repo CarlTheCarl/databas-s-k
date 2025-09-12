@@ -8,6 +8,8 @@ import { readFile } from 'fs/promises';
 import path from 'path';
 
 let db;
+let requiredFieldMissing = false;
+let requiredFieldMissingText = "";
 
  try {
   
@@ -27,9 +29,9 @@ let db;
 
   const createStatement = `
       CREATE TABLE IF NOT EXISTS sounds (
-          title VARCHAR(50), 
-          artists VARCHAR(255), 
-          album VARCHAR(50), 
+          title VARCHAR(50) NOT NULL, 
+          artists VARCHAR(255) NOT NULL, 
+          album VARCHAR(50) NOT NULL, 
           genres VARCHAR(255), 
           duration DECIMAL(6,2),
           year INT,
@@ -47,42 +49,57 @@ let db;
       VALUES (?, ?, ?, ?, ?, ?)
     `;
 
-    for (let [index, file] of files.entries()) {
-  const filePath = path.join('./test_sound', file);
-  try {
-    const metadata = await musicMetadata.parseFile(filePath);
-    console.log(`[Processing file ${index + 1} of ${files.length}: ${file}]`);
+  for (let [index, file] of files.entries()) {
+    requiredFieldMissing = false;
+    requiredFieldMissingText = "ERROR:";
+    const filePath = path.join('./test_sound', file);
+    try {
+      const metadata = await musicMetadata.parseFile(filePath);
+      console.log(`[Processing file ${index + 1} of ${files.length}: ${file}]`);
 
-    const title = metadata.common.title || null;
-    const artists = metadata.common.artists?.join(', ') || null;
-    const album = metadata.common.album || 'Single (No Album)';
-    const genres = metadata.common.genre?.join(', ') || null;
-    const rawDuration = metadata.format.duration;
-    const duration = rawDuration != null
-      ? Number(rawDuration.toFixed(2))
-      : null;
-    const year = metadata.common.year || null;
+      const title = metadata.common.title || null;
+      if (title === null){
+        requiredFieldMissing = true;
+        requiredFieldMissingText += " [TITLE MISSING]";
+      }
+      const artists = metadata.common.artists?.join(', ') || null;
+      if (artists === null){
+        requiredFieldMissing = true;
+        requiredFieldMissingText += " [ARTIST MISSING]";
+      }
+      const album = metadata.common.album || 'Single (No Album)';
+      const genres = metadata.common.genre?.join(', ') || null;
+      const rawDuration = metadata.format.duration;
+      const duration = rawDuration != null
+        ? Number(rawDuration.toFixed(2))
+        : null;
+      const year = metadata.common.year || null;
 
-    const [result] = await db.execute(insertQuery, [
-    title,
-    artists,
-    album,
-    genres,
-    duration,
-    year
-  ]);
+      if (requiredFieldMissing){
+        console.log(`Missing required fields, skipped:  ${title} by ${artists} (${album})`)
+        console.log(requiredFieldMissingText)
+        continue;
+      }
+      const [result] = await db.execute(insertQuery, [
+      title,
+      artists,
+      album,
+      genres,
+      duration,
+      year
+    ]);
 
-  if (result.affectedRows === 0) {
-    console.log(`Duplicate skipped: ${title} by ${artists} (${album})`);
+    if (result.affectedRows === 0) {
+      console.log(`Duplicate skipped: ${title} by ${artists} (${album})`);
 
-  } else {
-    console.log(`Inserted: ${title} by ${artists} (${album})`);
-  }
+    } else {
+      console.log(`Inserted: ${title} by ${artists} (${album})`);
+    }
 
 
-  } catch (fileErr) {
-    console.warn(`Failed to process ${file}:`, fileErr.message);
-  }
+    } catch (fileErr) {
+      console.warn(`Failed to process ${file}:`, fileErr.message);
+    }
 }
 
  } catch(err) {
