@@ -35,6 +35,7 @@ let requiredFieldMissingText = "";
           genres VARCHAR(255), 
           duration DECIMAL(6,2),
           year INT,
+          filesize INT,
           UNIQUE(title, artists, album)
       )
   `;
@@ -45,8 +46,8 @@ let requiredFieldMissingText = "";
     );
 
     const insertQuery = `
-      INSERT IGNORE INTO sounds (title, artists, album, genres, duration, year)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT IGNORE INTO sounds (title, artists, album, genres, duration, year, filesize)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
 
   for (let [index, file] of files.entries()) {
@@ -74,6 +75,8 @@ let requiredFieldMissingText = "";
         ? Number(rawDuration.toFixed(2))
         : null;
       const year = metadata.common.year || null;
+      const stats = fs.statSync(filePath)
+      const filesize = stats.size
 
       if (requiredFieldMissing){
         console.log(`Missing required fields, skipped:  ${title} by ${artists} (${album})`)
@@ -86,7 +89,8 @@ let requiredFieldMissingText = "";
       album,
       genres,
       duration,
-      year
+      year,
+      filesize
     ]);
 
     if (result.affectedRows === 0) {
