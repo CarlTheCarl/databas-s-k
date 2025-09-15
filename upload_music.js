@@ -36,6 +36,7 @@ let requiredFieldMissingText = "";
           duration DECIMAL(6,2),
           year INT,
           filesize INT,
+          url VARCHAR(255),
           UNIQUE(title, artists, album)
       )
   `;
@@ -46,8 +47,8 @@ let requiredFieldMissingText = "";
     );
 
     const insertQuery = `
-      INSERT IGNORE INTO sounds (title, artists, album, genres, duration, year, filesize)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT IGNORE INTO sounds (title, artists, album, genres, duration, year, filesize, url)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
   for (let [index, file] of files.entries()) {
@@ -77,6 +78,7 @@ let requiredFieldMissingText = "";
       const year = metadata.common.year || null;
       const stats = fs.statSync(filePath)
       const filesize = stats.size
+      const url = filePath
 
       if (requiredFieldMissing){
         console.log(`Missing required fields, skipped:  ${title} by ${artists} (${album})`)
@@ -90,12 +92,12 @@ let requiredFieldMissingText = "";
       genres,
       duration,
       year,
-      filesize
+      filesize,
+      url
     ]);
 
     if (result.affectedRows === 0) {
       console.log(`Duplicate skipped: ${title} by ${artists} (${album})`);
-
     } else {
       console.log(`Inserted: ${title} by ${artists} (${album})`);
     }
