@@ -78,7 +78,7 @@ let requiredFieldMissingText = "";
       const year = metadata.common.year || null;
       const stats = fs.statSync(filePath)
       const filesize = stats.size
-      const url = filePath
+      const url  = path.resolve(filePath);
 
       if (requiredFieldMissing){
         console.log(`Missing required fields, skipped:  ${title} by ${artists} (${album})`)
